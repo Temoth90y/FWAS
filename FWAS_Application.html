@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FWAS — Finance Workflow Assistance System</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0f1117;
+    --ink2: #2a2d3a;
+    --muted: #6b7280;
+    --border: #e5e7eb;
+    --bg: #f8f7f4;
+    --surface: #ffffff;
+    --surface2: #f3f2ef;
+    --accent: #1a56db;
+    --accent-light: #dbeafe;
+    --green: #059669;
+    --green-light: #d1fae5;
+    --amber: #d97706;
+    --amber-light: #fef3c7;
+    --red: #dc2626;
+    --red-light: #fee2e2;
+    --purple: #7c3aed;
+    --purple-light: #ede9fe;
+    --radius: 10px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.04);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.10);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Outfit', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    font-size: 14px;
+  }
+
+  /* ── AUTH ─────────────────────────────────────────── */
+  #auth-screen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #0f1117 60%, #1a56db 100%);
+  }
+  .auth-card {
+    background: var(--surface);
+    border-radius: 20px;
+    padding: 48px 40px 40px;
+    width: 380px;
+    box-shadow: var(--shadow-lg);
+  }
+  .auth-logo {
+    font-family: 'DM Serif Display', serif;
+    font-size: 26px;
+    color: var(--accent);
+    letter-spacing: -0.5px;
+    margin-bottom: 6px;
+  }
+  .auth-tagline { color: var(--muted); font-size: 13px; margin-bottom: 36px; }
+  .auth-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); margin-bottom: 6px; display: block; }
+  .auth-input {
+    width: 100%; padding: 11px 14px; border: 1.5px solid var(--border);
+    border-radius: 8px; font-family: 'Outfit', sans-serif; font-size: 14px;
+    color: var(--ink); background: var(--bg); outline: none;
+    transition: border-color .15s;
+    margin-bottom: 18px;
+  }
+  .auth-input:focus { border-color: var(--accent); background: #fff; }
+  .auth-btn {
+    width: 100%; padding: 12px; background: var(--accent); color: #fff;
+    border: none; border-radius: 8px; font-family: 'Outfit', sans-serif;
+    font-size: 15px; font-weight: 600; cursor: pointer;
+    transition: opacity .15s, transform .1s;
+  }
+  .auth-btn:hover { opacity: .9; transform: translateY(-1px); }
+  .auth-hint { text-align: center; color: var(--muted); font-size: 12px; margin-top: 20px; }
+  .auth-err { background: var(--red-light); color: var(--red); padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; display: none; }
+
+  /* ── APP SHELL ────────────────────────────────────── */
+  #app { display: none; min-height: 100vh; }
+  .sidebar {
+    position: fixed; left: 0; top: 0; bottom: 0; width: 220px;
+    background: var(--ink); padding: 24px 0; z-index: 100;
+    display: flex; flex-direction: column;
+  }
+  .sidebar-logo {
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px; color: #fff; padding: 0 20px 28px;
+    letter-spacing: -0.5px;
+  }
+  .sidebar-logo span { color: var(--accent); }
+  .nav-section { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #4b5563; padding: 0 20px 8px; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 20px; color: #9ca3af; cursor: pointer;
+    transition: all .15s; font-size: 13.5px; font-weight: 500;
+    border-left: 3px solid transparent; margin: 1px 0;
+  }
+  .nav-item:hover { color: #fff; background: rgba(255,255,255,0.04); }
+  .nav-item.active { color: #fff; border-left-color: var(--accent); background: rgba(26,86,219,0.15); }
+  .nav-icon { font-size: 16px; width: 18px; text-align: center; }
+  .sidebar-spacer { flex: 1; }
+  .sidebar-user {
+    padding: 16px 20px; border-top: 1px solid #1f2937;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .user-avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--accent); display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 13px; color: #fff;
+  }
+  .user-info { flex: 1; min-width: 0; }
+  .user-name { color: #e5e7eb; font-size: 13px; font-weight: 500; }
+  .user-role { color: #6b7280; font-size: 11px; }
+  .logout-btn { color: #6b7280; cursor: pointer; font-size: 18px; }
+  .logout-btn:hover { color: #ef4444; }
+
+  .main { margin-left: 220px; padding: 32px; min-height: 100vh; }
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── TOPBAR ───────────────────────────────────────── */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 28px;
+  }
+  .page-title { font-family: 'DM Serif Display', serif; font-size: 28px; color: var(--ink); letter-spacing: -0.5px; }
+  .page-sub { color: var(--muted); font-size: 13px; margin-top: 2px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 9px 18px; border-radius: 8px; font-family: 'Outfit', sans-serif;
+    font-size: 13.5px; font-weight: 600; cursor: pointer; border: none;
+    transition: all .15s;
+  }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { opacity: .88; transform: translateY(-1px); }
+  .btn-ghost { background: var(--surface); color: var(--ink); border: 1.5px solid var(--border); }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-danger { background: var(--red-light); color: var(--red); }
+  .btn-danger:hover { background: var(--red); color: #fff; }
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
+  .btn-green { background: var(--green-light); color: var(--green); }
+  .btn-green:hover { background: var(--green); color: #fff; }
+
+  /* ── CARDS ────────────────────────────────────────── */
+  .card {
+    background: var(--surface); border-radius: var(--radius);
+    border: 1.5px solid var(--border); box-shadow: var(--shadow);
+    padding: 24px;
+  }
+  .stat-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 28px; }
+  .stat-card {
+    background: var(--surface); border-radius: var(--radius);
+    border: 1.5px solid var(--border); padding: 20px 22px;
+    box-shadow: var(--shadow); position: relative; overflow: hidden;
+  }
+  .stat-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  }
+  .stat-card.blue::before { background: var(--accent); }
+  .stat-card.green::before { background: var(--green); }
+  .stat-card.amber::before { background: var(--amber); }
+  .stat-card.purple::before { background: var(--purple); }
+  .stat-icon { font-size: 22px; margin-bottom: 12px; }
+  .stat-val { font-family: 'DM Serif Display', serif; font-size: 28px; color: var(--ink); }
+  .stat-label { color: var(--muted); font-size: 12px; font-weight: 500; margin-top: 3px; }
+
+  /* ── TABLE ────────────────────────────────────────── */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    text-align: left; padding: 11px 14px;
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px;
+    color: var(--muted); border-bottom: 1.5px solid var(--border);
+    background: var(--surface2);
+  }
+  td { padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: 13.5px; color: var(--ink2); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--surface2); }
+
+  /* ── BADGES ───────────────────────────────────────── */
+  .badge {
+    display: inline-flex; align-items: center; padding: 3px 9px;
+    border-radius: 99px; font-size: 11px; font-weight: 600;
+  }
+  .badge-green { background: var(--green-light); color: var(--green); }
+  .badge-amber { background: var(--amber-light); color: var(--amber); }
+  .badge-blue  { background: var(--accent-light); color: var(--accent); }
+  .badge-red   { background: var(--red-light); color: var(--red); }
+  .badge-purple{ background: var(--purple-light); color: var(--purple); }
+  .badge-grey  { background: var(--surface2); color: var(--muted); }
+
+  /* ── SEARCH BAR ───────────────────────────────────── */
+  .search-row { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+  .search-input {
+    flex: 1; padding: 9px 14px; border: 1.5px solid var(--border);
+    border-radius: 8px; font-family: 'Outfit', sans-serif; font-size: 14px;
+    background: var(--surface); outline: none; transition: border-color .15s;
+  }
+  .search-input:focus { border-color: var(--accent); }
+
+  /* ── MODAL ────────────────────────────────────────── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.45); z-index: 1000;
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface); border-radius: 14px; width: 520px; max-width: 95vw;
+    max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-lg);
+    animation: slideUp .2s ease;
+  }
+  @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: none; opacity: 1; } }
+  .modal-head {
+    padding: 22px 24px 18px; border-bottom: 1.5px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .modal-title { font-family: 'DM Serif Display', serif; font-size: 20px; }
+  .modal-close { font-size: 22px; cursor: pointer; color: var(--muted); line-height: 1; }
+  .modal-close:hover { color: var(--red); }
+  .modal-body { padding: 24px; }
+  .modal-foot { padding: 16px 24px; border-top: 1.5px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; }
+
+  /* ── FORM ELEMENTS ────────────────────────────────── */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .form-grid.one { grid-template-columns: 1fr; }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field.span2 { grid-column: span 2; }
+  .field label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .field input, .field select, .field textarea {
+    padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 8px;
+    font-family: 'Outfit', sans-serif; font-size: 14px; color: var(--ink);
+    background: var(--bg); outline: none; transition: border-color .15s;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus {
+    border-color: var(--accent); background: #fff;
+  }
+  .field textarea { resize: vertical; min-height: 72px; }
+
+  /* ── TOAST ────────────────────────────────────────── */
+  #toast {
+    position: fixed; bottom: 28px; right: 28px; z-index: 9999;
+    background: var(--ink); color: #fff; padding: 13px 20px;
+    border-radius: 10px; font-size: 13.5px; box-shadow: var(--shadow-lg);
+    transform: translateY(80px); opacity: 0; transition: all .3s cubic-bezier(.34,1.56,.64,1);
+    pointer-events: none;
+  }
+  #toast.show { transform: none; opacity: 1; }
+  #toast.success { background: var(--green); }
+  #toast.error   { background: var(--red); }
+
+  /* ── DASHBOARD RECENT ─────────────────────────────── */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .section-head h3 { font-size: 15px; font-weight: 600; }
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 13.5px; }
+  .empty-state .ei { font-size: 36px; margin-bottom: 10px; }
+
+  /* ── BATCH DETAIL ─────────────────────────────────── */
+  .batch-hero {
+    background: linear-gradient(135deg, var(--ink) 0%, #1e3a8a 100%);
+    border-radius: var(--radius); padding: 28px; margin-bottom: 24px; color: #fff;
+  }
+  .batch-hero-id { font-family: 'DM Mono', monospace; font-size: 12px; color: #93c5fd; margin-bottom: 6px; }
+  .batch-hero-desc { font-family: 'DM Serif Display', serif; font-size: 24px; margin-bottom: 16px; }
+  .batch-hero-stats { display: flex; gap: 32px; }
+  .bhs-val { font-family: 'DM Serif Display', serif; font-size: 22px; }
+  .bhs-label { font-size: 11px; color: #93c5fd; margin-top: 2px; }
+
+  /* ── ACTION ICONS ─────────────────────────────────── */
+  .action-row { display: flex; gap: 6px; }
+  .icon-btn {
+    width: 30px; height: 30px; border-radius: 6px; border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; font-size: 14px;
+    transition: all .15s;
+  }
+  .icon-btn.edit { background: var(--accent-light); color: var(--accent); }
+  .icon-btn.edit:hover { background: var(--accent); color: #fff; }
+  .icon-btn.del  { background: var(--red-light); color: var(--red); }
+  .icon-btn.del:hover { background: var(--red); color: #fff; }
+  .icon-btn.view { background: var(--purple-light); color: var(--purple); }
+  .icon-btn.view:hover { background: var(--purple); color: #fff; }
+
+  /* ── PILL FILTERS ─────────────────────────────────── */
+  .filter-pills { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .pill {
+    padding: 5px 14px; border-radius: 99px; font-size: 12px; font-weight: 600;
+    cursor: pointer; border: 1.5px solid var(--border); color: var(--muted);
+    background: var(--surface); transition: all .15s;
+  }
+  .pill.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  .mono { font-family: 'DM Mono', monospace; font-size: 12px; }
+  .ugx { font-family: 'DM Mono', monospace; color: var(--green); font-weight: 500; }
+
+  /* Responsive tweak */
+  @media (max-width: 900px) {
+    .stat-grid { grid-template-columns: 1fr 1fr; }
+    .two-col { grid-template-columns: 1fr; }
+    .form-grid { grid-template-columns: 1fr; }
+    .field.span2 { grid-column: span 1; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════ AUTH SCREEN ═══════════════════ -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo">FWAS</div>
+    <div class="auth-tagline">Finance Workflow Assistance System — MUST</div>
+    <div class="auth-err" id="auth-err">Invalid credentials. Please try again.</div>
+    <label class="auth-label">Username</label>
+    <input class="auth-input" id="login-user" type="text" placeholder="e.g. officer1" value="officer1">
+    <label class="auth-label">Password</label>
+    <input class="auth-input" id="login-pass" type="password" placeholder="Password" value="password">
+    <button class="auth-btn" onclick="doLogin()">Sign In</button>
+    <p class="auth-hint">Demo: officer1 / password &nbsp;|&nbsp; admin / admin123</p>
+  </div>
+</div>
+
+<!-- ═══════════════════ APP SHELL ═══════════════════════ -->
+<div id="app">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-logo">FW<span>AS</span></div>
+    <div class="nav-section">Main</div>
+    <div class="nav-item active" onclick="nav('dashboard')"><span class="nav-icon">🏠</span> Dashboard</div>
+    <div class="nav-item" onclick="nav('suppliers')"><span class="nav-icon">🏢</span> Suppliers</div>
+    <div class="nav-item" onclick="nav('payments')"><span class="nav-icon">📄</span> Payments</div>
+    <div class="nav-item" onclick="nav('batches')"><span class="nav-icon">📦</span> Batches</div>
+    <div class="nav-section" style="margin-top:12px;">Reports</div>
+    <div class="nav-item" onclick="nav('exports')"><span class="nav-icon">📊</span> Export / Reports</div>
+    <div class="nav-item admin-only" onclick="nav('users')" style="display:none"><span class="nav-icon">👥</span> Users</div>
+    <div class="sidebar-spacer"></div>
+    <div class="sidebar-user">
+      <div class="user-avatar" id="user-av">FO</div>
+      <div class="user-info">
+        <div class="user-name" id="user-name-lbl">Finance Officer</div>
+        <div class="user-role" id="user-role-lbl">Officer</div>
+      </div>
+      <div class="logout-btn" onclick="doLogout()" title="Logout">⏻</div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- ── DASHBOARD ─────────────────────────────── -->
+    <div class="page active" id="page-dashboard">
+      <div class="topbar">
+        <div>
+          <div class="page-title">Dashboard</div>
+          <div class="page-sub">Welcome back, <span id="dash-welcome"></span></div>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button class="btn btn-ghost" onclick="nav('payments');openPaymentModal()">+ New Payment</button>
+          <button class="btn btn-primary" onclick="nav('batches');openBatchModal()">+ New Batch</button>
+        </div>
+      </div>
+      <div class="stat-grid">
+        <div class="stat-card blue"><div class="stat-icon">🏢</div><div class="stat-val" id="ds-suppliers">0</div><div class="stat-label">Suppliers</div></div>
+        <div class="stat-card green"><div class="stat-icon">📄</div><div class="stat-val" id="ds-payments">0</div><div class="stat-label">Payments</div></div>
+        <div class="stat-card amber"><div class="stat-icon">📦</div><div class="stat-val" id="ds-batches">0</div><div class="stat-label">Batches</div></div>
+        <div class="stat-card purple"><div class="stat-icon">✅</div><div class="stat-val" id="ds-finalized">0</div><div class="stat-label">Finalized Batches</div></div>
+      </div>
+      <div class="two-col">
+        <div class="card">
+          <div class="section-head"><h3>Recent Payments</h3><button class="btn btn-ghost btn-sm" onclick="nav('payments')">View all</button></div>
+          <div id="dash-recent-payments"></div>
+        </div>
+        <div class="card">
+          <div class="section-head"><h3>Open Batches</h3><button class="btn btn-ghost btn-sm" onclick="nav('batches')">View all</button></div>
+          <div id="dash-open-batches"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SUPPLIERS ──────────────────────────────── -->
+    <div class="page" id="page-suppliers">
+      <div class="topbar">
+        <div><div class="page-title">Suppliers</div><div class="page-sub">Manage supplier records and TIN details</div></div>
+        <button class="btn btn-primary" onclick="openSupplierModal()">+ Add Supplier</button>
+      </div>
+      <div class="card">
+        <div class="search-row">
+          <input class="search-input" id="supplier-search" placeholder="🔍  Search by name or TIN…" oninput="renderSuppliers()">
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>TIN</th><th>Phone</th><th>Bank</th><th>Account</th><th>Actions</th></tr></thead>
+            <tbody id="supplier-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PAYMENTS ───────────────────────────────── -->
+    <div class="page" id="page-payments">
+      <div class="topbar">
+        <div><div class="page-title">Payments</div><div class="page-sub">Record and manage payment entries</div></div>
+        <button class="btn btn-primary" onclick="openPaymentModal()">+ Record Payment</button>
+      </div>
+      <div class="card">
+        <div class="search-row">
+          <input class="search-input" id="payment-search" placeholder="🔍  Search by supplier or purpose…" oninput="renderPayments()">
+        </div>
+        <div class="filter-pills">
+          <div class="pill active" data-pf="All" onclick="setPayFilter(this)">All</div>
+          <div class="pill" data-pf="Draft" onclick="setPayFilter(this)">Draft</div>
+          <div class="pill" data-pf="Ready" onclick="setPayFilter(this)">Ready</div>
+          <div class="pill" data-pf="Batched" onclick="setPayFilter(this)">Batched</div>
+          <div class="pill" data-pf="Processed" onclick="setPayFilter(this)">Processed</div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Supplier</th><th>Amount (UGX)</th><th>Purpose</th><th>Invoice #</th><th>Pay Date</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="payment-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── BATCHES ────────────────────────────────── -->
+    <div class="page" id="page-batches">
+      <div class="topbar">
+        <div><div class="page-title">Batches</div><div class="page-sub">Organize payments for IFMS submission</div></div>
+        <button class="btn btn-primary" onclick="openBatchModal()">+ New Batch</button>
+      </div>
+      <div class="card">
+        <div class="filter-pills">
+          <div class="pill active" data-bf="All" onclick="setBatchFilter(this)">All</div>
+          <div class="pill" data-bf="Open" onclick="setBatchFilter(this)">Open</div>
+          <div class="pill" data-bf="Finalized" onclick="setBatchFilter(this)">Finalized</div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Batch ID</th><th>Description</th><th>Payments</th><th>Total (UGX)</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead>
+            <tbody id="batch-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── BATCH DETAIL ───────────────────────────── -->
+    <div class="page" id="page-batch-detail">
+      <div class="topbar">
+        <div>
+          <button class="btn btn-ghost btn-sm" onclick="nav('batches')" style="margin-bottom:10px;">← Back to Batches</button>
+          <div class="page-title" id="bd-title">Batch Detail</div>
+        </div>
+        <div style="display:flex;gap:10px;" id="bd-actions"></div>
+      </div>
+      <div class="batch-hero" id="bd-hero"></div>
+      <div class="card">
+        <div class="section-head">
+          <h3>Payments in this Batch</h3>
+          <button class="btn btn-ghost btn-sm" id="bd-add-btn" onclick="openAddToBatchModal()">+ Add Payment</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Supplier</th><th>Amount (UGX)</th><th>Purpose</th><th>Invoice #</th><th>Remove</th></tr></thead>
+            <tbody id="bd-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── EXPORTS ────────────────────────────────── -->
+    <div class="page" id="page-exports">
+      <div class="topbar"><div><div class="page-title">Export &amp; Reports</div><div class="page-sub">Generate summaries and export data</div></div></div>
+      <div class="two-col">
+        <div class="card">
+          <h3 style="margin-bottom:16px;font-size:15px;">Export Batch Summary</h3>
+          <div class="field" style="margin-bottom:14px;">
+            <label>Select Batch</label>
+            <select id="export-batch-sel"></select>
+          </div>
+          <button class="btn btn-primary" style="width:100%" onclick="doExportBatch()">📊 Export as CSV</button>
+        </div>
+        <div class="card">
+          <h3 style="margin-bottom:16px;font-size:15px;">Export All Suppliers</h3>
+          <p style="color:var(--muted);font-size:13px;margin-bottom:16px;">Download the full supplier list including TIN and bank details.</p>
+          <button class="btn btn-ghost" style="width:100%" onclick="doExportSuppliers()">📋 Export Suppliers CSV</button>
+        </div>
+      </div>
+      <div class="card" style="margin-top:20px;">
+        <div class="section-head"><h3>All Batches Summary</h3></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Batch ID</th><th>Description</th><th>Payments</th><th>Total (UGX)</th><th>Status</th></tr></thead>
+            <tbody id="export-batch-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── USERS (ADMIN) ──────────────────────────── -->
+    <div class="page" id="page-users">
+      <div class="topbar">
+        <div><div class="page-title">User Management</div><div class="page-sub">Admin only — manage system accounts</div></div>
+        <button class="btn btn-primary" onclick="openUserModal()">+ Create User</button>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Full Name</th><th>Username</th><th>Role</th><th>Actions</th></tr></thead>
+            <tbody id="user-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- ══════════════════ MODALS ═══════════════════════════ -->
+
+<!-- Supplier Modal -->
+<div class="modal-overlay" id="supplier-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title" id="sm-title">Add Supplier</div>
+      <div class="modal-close" onclick="closeModal('supplier-modal')">✕</div>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="field span2"><label>Supplier Name</label><input id="sm-name" placeholder="e.g. Mbarara Tech Supplies"></div>
+        <div class="field"><label>TIN (9-10 digits)</label><input id="sm-tin" placeholder="123456789"></div>
+        <div class="field"><label>Phone</label><input id="sm-phone" placeholder="+256 700 000 000"></div>
+        <div class="field"><label>Email</label><input id="sm-email" placeholder="info@example.com"></div>
+        <div class="field"><label>Address</label><input id="sm-address" placeholder="Physical address"></div>
+        <div class="field"><label>Bank Name</label><input id="sm-bank" placeholder="e.g. Centenary Bank"></div>
+        <div class="field"><label>Account Number</label><input id="sm-account" placeholder="1000000000"></div>
+        <div class="field"><label>Bank Branch</label><input id="sm-branch" placeholder="e.g. Mbarara Main"></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('supplier-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSupplier()">Save Supplier</button>
+    </div>
+  </div>
+</div>
+
+<!-- Payment Modal -->
+<div class="modal-overlay" id="payment-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title" id="pm-title">Record Payment</div>
+      <div class="modal-close" onclick="closeModal('payment-modal')">✕</div>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="field span2">
+          <label>Supplier</label>
+          <select id="pm-supplier"></select>
+        </div>
+        <div class="field"><label>Amount (UGX)</label><input id="pm-amount" type="number" placeholder="0"></div>
+        <div class="field"><label>Invoice Number</label><input id="pm-invoice" placeholder="INV-001"></div>
+        <div class="field span2"><label>Purpose</label><input id="pm-purpose" placeholder="Description of payment"></div>
+        <div class="field"><label>Invoice Date</label><input id="pm-inv-date" type="date"></div>
+        <div class="field"><label>Payment Date</label><input id="pm-pay-date" type="date"></div>
+        <div class="field span2">
+          <label>Status</label>
+          <select id="pm-status">
+            <option>Draft</option><option>Ready</option><option>Processed</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('payment-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="savePayment()">Save Payment</button>
+    </div>
+  </div>
+</div>
+
+<!-- Batch Modal -->
+<div class="modal-overlay" id="batch-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Create New Batch</div>
+      <div class="modal-close" onclick="closeModal('batch-modal')">✕</div>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid one">
+        <div class="field"><label>Batch Description</label><input id="bm-desc" placeholder="e.g. Q2 Supplier Payments March 2025"></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('batch-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveBatch()">Create Batch</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add to Batch Modal -->
+<div class="modal-overlay" id="add-batch-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Add Payment to Batch</div>
+      <div class="modal-close" onclick="closeModal('add-batch-modal')">✕</div>
+    </div>
+    <div class="modal-body">
+      <p style="color:var(--muted);font-size:13px;margin-bottom:16px;">Select payments not yet assigned to a batch:</p>
+      <div id="eligible-payments-list"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('add-batch-modal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- User Modal -->
+<div class="modal-overlay" id="user-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Create User</div>
+      <div class="modal-close" onclick="closeModal('user-modal')">✕</div>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="field span2"><label>Full Name</label><input id="um-name" placeholder="e.g. Amanya Peter"></div>
+        <div class="field"><label>Username</label><input id="um-user" placeholder="username"></div>
+        <div class="field"><label>Password</label><input id="um-pass" type="password" placeholder="password"></div>
+        <div class="field span2"><label>Role</label><select id="um-role"><option>Officer</option><option>Supervisor</option><option>Admin</option></select></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('user-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveUser()">Create User</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  FWAS — Client-Side Application State
+// ═══════════════════════════════════════════════════════
+
+// ── Seed Data ──────────────────────────────────────────
+let db = {
+  users: [
+    { id:1, username:'officer1', password:'password', role:'Officer', fullName:'Amanya Peter' },
+    { id:2, username:'admin',    password:'admin123',  role:'Admin',   fullName:'Musasire Kenneth' },
+    { id:3, username:'super1',   password:'super123',  role:'Supervisor', fullName:'Ayikoru Jackline' },
+  ],
+  suppliers: [
+    { id:1, name:'Mbarara Tech Supplies', tin:'123456789', phone:'+256 700 123 456', email:'info@mtech.ug', address:'Industrial Area, Mbarara', bank:'Centenary Bank', account:'1000234567', branch:'Mbarara Main' },
+    { id:2, name:'Kihumuro Consult Ltd',  tin:'987654321', phone:'+256 772 654 321', email:'kihumuro@consult.ug', address:'Plot 12 High St, Mbarara', bank:'Stanbic Bank', account:'9001112233', branch:'Kampala Rd' },
+    { id:3, name:'Nile Suppliers Co',     tin:'456123789', phone:'+256 756 001 002', email:'nile@supply.co.ug', address:'Ntare Rd, Mbarara', bank:'DFCU Bank', account:'3004445566', branch:'Mbarara Branch' },
+  ],
+  payments: [
+    { id:1, supplierId:1, amount:2500000, purpose:'Consultancy fee March', invoice:'INV-223-24', invoiceDate:'2025-03-10', payDate:'2025-03-25', status:'Batched', batchId:1 },
+    { id:2, supplierId:2, amount:890000,  purpose:'Office supplies Q1',    invoice:'INV-908',    invoiceDate:'2025-02-28', payDate:'2025-03-15', status:'Batched', batchId:1 },
+    { id:3, supplierId:3, amount:3500000, purpose:'IT equipment purchase', invoice:'INV-045',    invoiceDate:'2025-03-12', payDate:'2025-04-01', status:'Ready',   batchId:null },
+    { id:4, supplierId:1, amount:1200000, purpose:'Maintenance services',  invoice:'INV-067',    invoiceDate:'2025-03-20', payDate:'2025-04-10', status:'Draft',   batchId:null },
+  ],
+  batches: [
+    { id:1, description:'March Salary Top-up / Part-time Payments', status:'Open', createdBy:1, createdAt:'2025-03-01' },
+  ],
+  nextId: { suppliers:4, payments:5, batches:2, users:4 },
+};
+
+let currentUser = null;
+let currentBatchId = null;
+let editingSupplier = null;
+let editingPayment = null;
+let payFilter = 'All';
+let batchFilter = 'All';
+
+// ── Auth ───────────────────────────────────────────────
+function doLogin() {
+  const u = document.getElementById('login-user').value.trim();
+  const p = document.getElementById('login-pass').value.trim();
+  const user = db.users.find(x => x.username === u && x.password === p);
+  if (!user) { document.getElementById('auth-err').style.display='block'; return; }
+  currentUser = user;
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('user-av').textContent = user.fullName.split(' ').map(x=>x[0]).join('').toUpperCase().slice(0,2);
+  document.getElementById('user-name-lbl').textContent = user.fullName;
+  document.getElementById('user-role-lbl').textContent = user.role;
+  document.getElementById('dash-welcome').textContent = user.fullName.split(' ')[0];
+  if (user.role === 'Admin') document.querySelectorAll('.admin-only').forEach(e=>e.style.display='flex');
+  renderDashboard();
+}
+function doLogout() {
+  currentUser = null;
+  document.getElementById('app').style.display='none';
+  document.getElementById('auth-screen').style.display='flex';
+  document.getElementById('auth-err').style.display='none';
+}
+
+// ── Navigation ─────────────────────────────────────────
+function nav(page) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  const items = document.querySelectorAll('.nav-item');
+  items.forEach(n => { if(n.getAttribute('onclick') && n.getAttribute('onclick').includes("'"+page+"'")) n.classList.add('active'); });
+  if (page==='dashboard') renderDashboard();
+  if (page==='suppliers') renderSuppliers();
+  if (page==='payments')  renderPayments();
+  if (page==='batches')   renderBatches();
+  if (page==='exports')   renderExports();
+  if (page==='users')     renderUsers();
+}
+
+// ── Dashboard ──────────────────────────────────────────
+function renderDashboard() {
+  document.getElementById('ds-suppliers').textContent = db.suppliers.length;
+  document.getElementById('ds-payments').textContent  = db.payments.length;
+  document.getElementById('ds-batches').textContent   = db.batches.length;
+  document.getElementById('ds-finalized').textContent = db.batches.filter(b=>b.status==='Finalized').length;
+
+  const rp = document.getElementById('dash-recent-payments');
+  const recent = [...db.payments].reverse().slice(0,5);
+  if (!recent.length) { rp.innerHTML='<div class="empty-state"><div class="ei">📄</div>No payments yet</div>'; }
+  else rp.innerHTML = `<table><thead><tr><th>Supplier</th><th>Amount</th><th>Status</th></tr></thead><tbody>
+    ${recent.map(p=>`<tr><td>${supplierName(p.supplierId)}</td><td class="ugx">${fmt(p.amount)}</td><td>${badge(p.status)}</td></tr>`).join('')}
+  </tbody></table>`;
+
+  const ob = document.getElementById('dash-open-batches');
+  const open = db.batches.filter(b=>b.status==='Open').slice(0,5);
+  if (!open.length) { ob.innerHTML='<div class="empty-state"><div class="ei">📦</div>No open batches</div>'; }
+  else ob.innerHTML = `<table><thead><tr><th>Description</th><th>Payments</th><th>Total</th></tr></thead><tbody>
+    ${open.map(b=>{
+      const pays = db.payments.filter(p=>p.batchId===b.id);
+      const total = pays.reduce((s,p)=>s+p.amount,0);
+      return `<tr><td>${b.description}</td><td>${pays.length}</td><td class="ugx">${fmt(total)}</td></tr>`;
+    }).join('')}
+  </tbody></table>`;
+}
+
+// ── Suppliers ──────────────────────────────────────────
+function renderSuppliers() {
+  const q = (document.getElementById('supplier-search')?.value||'').toLowerCase();
+  const rows = db.suppliers.filter(s=> !q || s.name.toLowerCase().includes(q) || s.tin.includes(q));
+  document.getElementById('supplier-tbody').innerHTML = rows.length
+    ? rows.map(s=>`<tr>
+        <td><b>${s.name}</b></td>
+        <td class="mono">${s.tin}</td>
+        <td>${s.phone}</td>
+        <td>${s.bank}</td>
+        <td class="mono">${s.account}</td>
+        <td><div class="action-row">
+          <button class="icon-btn edit" onclick="openSupplierModal(${s.id})" title="Edit">✏️</button>
+          <button class="icon-btn del"  onclick="deleteSupplier(${s.id})" title="Delete">🗑️</button>
+        </div></td>
+      </tr>`).join('')
+    : `<tr><td colspan="6"><div class="empty-state"><div class="ei">🏢</div>No suppliers found</div></td></tr>`;
+}
+
+function openSupplierModal(id) {
+  editingSupplier = id || null;
+  document.getElementById('sm-title').textContent = id ? 'Edit Supplier' : 'Add Supplier';
+  const s = id ? db.suppliers.find(x=>x.id===id) : {};
+  ['name','tin','phone','email','address','bank','account','branch'].forEach(f=>{
+    document.getElementById('sm-'+f).value = s[f] || '';
+  });
+  openModal('supplier-modal');
+}
+
+function saveSupplier() {
+  const fields = ['name','tin','phone','email','address','bank','account','branch'];
+  const data = {};
+  fields.forEach(f => data[f] = document.getElementById('sm-'+f).value.trim());
+  if (!data.name || !data.tin) { toast('Name and TIN are required','error'); return; }
+  if (editingSupplier) {
+    const idx = db.suppliers.findIndex(s=>s.id===editingSupplier);
+    db.suppliers[idx] = { ...db.suppliers[idx], ...data };
+    toast('Supplier updated ✓','success');
+  } else {
+    db.suppliers.push({ id: db.nextId.suppliers++, ...data });
+    toast('Supplier added ✓','success');
+  }
+  closeModal('supplier-modal');
+  renderSuppliers();
+}
+
+function deleteSupplier(id) {
+  if (!confirm('Delete this supplier? This cannot be undone.')) return;
+  db.suppliers = db.suppliers.filter(s=>s.id!==id);
+  renderSuppliers();
+  toast('Supplier deleted');
+}
+
+// ── Payments ───────────────────────────────────────────
+function setPayFilter(el) {
+  document.querySelectorAll('.filter-pills .pill').forEach(p => {
+    if (p.dataset.pf !== undefined) p.classList.remove('active');
+  });
+  el.classList.add('active');
+  payFilter = el.dataset.pf;
+  renderPayments();
+}
+
+function renderPayments() {
+  const q = (document.getElementById('payment-search')?.value||'').toLowerCase();
+  let rows = db.payments.filter(p => {
+    const match = !q || supplierName(p.supplierId).toLowerCase().includes(q) || p.purpose.toLowerCase().includes(q);
+    const filt = payFilter === 'All' || p.status === payFilter;
+    return match && filt;
+  });
+  document.getElementById('payment-tbody').innerHTML = rows.length
+    ? rows.map(p=>`<tr>
+        <td>${supplierName(p.supplierId)}</td>
+        <td class="ugx">${fmt(p.amount)}</td>
+        <td>${p.purpose}</td>
+        <td class="mono">${p.invoice}</td>
+        <td class="mono">${p.payDate}</td>
+        <td>${badge(p.status)}</td>
+        <td><div class="action-row">
+          <button class="icon-btn edit" onclick="openPaymentModal(${p.id})" title="Edit">✏️</button>
+          <button class="icon-btn del"  onclick="deletePayment(${p.id})" title="Delete">🗑️</button>
+        </div></td>
+      </tr>`).join('')
+    : `<tr><td colspan="7"><div class="empty-state"><div class="ei">📄</div>No payments found</div></td></tr>`;
+}
+
+function openPaymentModal(id) {
+  editingPayment = id || null;
+  document.getElementById('pm-title').textContent = id ? 'Edit Payment' : 'Record Payment';
+  const suppliers = db.suppliers;
+  document.getElementById('pm-supplier').innerHTML = suppliers.map(s=>`<option value="${s.id}">${s.name} (${s.tin})</option>`).join('');
+  const p = id ? db.payments.find(x=>x.id===id) : {};
+  if (id) {
+    document.getElementById('pm-supplier').value = p.supplierId;
+    document.getElementById('pm-amount').value   = p.amount;
+    document.getElementById('pm-invoice').value  = p.invoice;
+    document.getElementById('pm-purpose').value  = p.purpose;
+    document.getElementById('pm-inv-date').value = p.invoiceDate;
+    document.getElementById('pm-pay-date').value = p.payDate;
+    document.getElementById('pm-status').value   = p.status;
+  } else {
+    ['pm-amount','pm-invoice','pm-purpose','pm-inv-date','pm-pay-date'].forEach(f=>document.getElementById(f).value='');
+    document.getElementById('pm-status').value='Draft';
+  }
+  openModal('payment-modal');
+}
+
+function savePayment() {
+  const data = {
+    supplierId: parseInt(document.getElementById('pm-supplier').value),
+    amount:     parseFloat(document.getElementById('pm-amount').value),
+    invoice:    document.getElementById('pm-invoice').value.trim(),
+    purpose:    document.getElementById('pm-purpose').value.trim(),
+    invoiceDate:document.getElementById('pm-inv-date').value,
+    payDate:    document.getElementById('pm-pay-date').value,
+    status:     document.getElementById('pm-status').value,
+  };
+  if (!data.amount || !data.invoice || !data.purpose) { toast('Amount, invoice, and purpose are required','error'); return; }
+  if (editingPayment) {
+    const idx = db.payments.findIndex(p=>p.id===editingPayment);
+    db.payments[idx] = { ...db.payments[idx], ...data };
+    toast('Payment updated ✓','success');
+  } else {
+    db.payments.push({ id: db.nextId.payments++, batchId:null, ...data });
+    toast('Payment recorded ✓','success');
+  }
+  closeModal('payment-modal');
+  renderPayments();
+}
+
+function deletePayment(id) {
+  if (!confirm('Delete this payment?')) return;
+  db.payments = db.payments.filter(p=>p.id!==id);
+  renderPayments();
+  toast('Payment deleted');
+}
+
+// ── Batches ────────────────────────────────────────────
+function setBatchFilter(el) {
+  document.querySelectorAll('.filter-pills .pill').forEach(p => {
+    if (p.dataset.bf !== undefined) p.classList.remove('active');
+  });
+  el.classList.add('active');
+  batchFilter = el.dataset.bf;
+  renderBatches();
+}
+
+function renderBatches() {
+  let rows = db.batches.filter(b=> batchFilter==='All' || b.status===batchFilter);
+  document.getElementById('batch-tbody').innerHTML = rows.length
+    ? rows.map(b=>{
+        const pays = db.payments.filter(p=>p.batchId===b.id);
+        const total = pays.reduce((s,p)=>s+p.amount,0);
+        return `<tr>
+          <td class="mono">B-${String(b.id).padStart(4,'0')}</td>
+          <td><b>${b.description}</b></td>
+          <td>${pays.length}</td>
+          <td class="ugx">${fmt(total)}</td>
+          <td>${badge(b.status==='Finalized'?'Finalized':'Open')}</td>
+          <td class="mono">${b.createdAt}</td>
+          <td><div class="action-row">
+            <button class="icon-btn view" onclick="openBatchDetail(${b.id})" title="View">👁️</button>
+            ${b.status==='Open'?`<button class="icon-btn edit" onclick="finalizeBatch(${b.id})" title="Finalize" style="background:var(--green-light);color:var(--green);">✓</button>`:''}
+            <button class="icon-btn del" onclick="deleteBatch(${b.id})" title="Delete">🗑️</button>
+          </div></td>
+        </tr>`;
+      }).join('')
+    : `<tr><td colspan="7"><div class="empty-state"><div class="ei">📦</div>No batches found</div></td></tr>`;
+}
+
+function openBatchModal() {
+  document.getElementById('bm-desc').value = '';
+  openModal('batch-modal');
+}
+
+function saveBatch() {
+  const desc = document.getElementById('bm-desc').value.trim();
+  if (!desc) { toast('Description is required','error'); return; }
+  db.batches.push({
+    id: db.nextId.batches++, description: desc,
+    status:'Open', createdBy: currentUser.id,
+    createdAt: new Date().toISOString().split('T')[0]
+  });
+  toast('Batch created ✓','success');
+  closeModal('batch-modal');
+  renderBatches();
+}
+
+function deleteBatch(id) {
+  if (!confirm('Delete this batch? Payments will be unlinked.')) return;
+  db.payments.forEach(p => { if (p.batchId===id) { p.batchId=null; p.status='Ready'; } });
+  db.batches = db.batches.filter(b=>b.id!==id);
+  renderBatches();
+  toast('Batch deleted');
+}
+
+function finalizeBatch(id) {
+  const b = db.batches.find(x=>x.id===id);
+  const pays = db.payments.filter(p=>p.batchId===id);
+  if (pays.length===0) { toast('Cannot finalize an empty batch','error'); return; }
+  if (!confirm('Finalize this batch? Payments will be locked.')) return;
+  b.status = 'Finalized';
+  pays.forEach(p => p.status = 'Processed');
+  toast('Batch finalized ✓','success');
+  renderBatches();
+}
+
+function openBatchDetail(id) {
+  currentBatchId = id;
+  const b = db.batches.find(x=>x.id===id);
+  const pays = db.payments.filter(p=>p.batchId===id);
+  const total = pays.reduce((s,p)=>s+p.amount,0);
+
+  document.getElementById('bd-title').textContent = b.description;
+  document.getElementById('bd-hero').innerHTML = `
+    <div class="batch-hero-id">B-${String(b.id).padStart(4,'0')} · ${b.status}</div>
+    <div class="batch-hero-desc">${b.description}</div>
+    <div class="batch-hero-stats">
+      <div><div class="bhs-val">${pays.length}</div><div class="bhs-label">Payments</div></div>
+      <div><div class="bhs-val">UGX ${fmt(total)}</div><div class="bhs-label">Total Amount</div></div>
+      <div><div class="bhs-val">${b.createdAt}</div><div class="bhs-label">Created</div></div>
+    </div>`;
+
+  document.getElementById('bd-actions').innerHTML = b.status==='Open'
+    ? `<button class="btn btn-ghost" onclick="doExportBatchById(${id})">📊 Export CSV</button>
+       <button class="btn btn-green" onclick="finalizeBatch(${id});nav('batch-detail')">✓ Finalize</button>`
+    : `<button class="btn btn-ghost" onclick="doExportBatchById(${id})">📊 Export CSV</button>`;
+
+  const addBtn = document.getElementById('bd-add-btn');
+  addBtn.style.display = b.status==='Open' ? 'inline-flex' : 'none';
+
+  renderBatchDetail();
+  nav('batch-detail');
+}
+
+function renderBatchDetail() {
+  const pays = db.payments.filter(p=>p.batchId===currentBatchId);
+  const b = db.batches.find(x=>x.id===currentBatchId);
+  document.getElementById('bd-tbody').innerHTML = pays.length
+    ? pays.map(p=>`<tr>
+        <td>${supplierName(p.supplierId)}</td>
+        <td class="ugx">${fmt(p.amount)}</td>
+        <td>${p.purpose}</td>
+        <td class="mono">${p.invoice}</td>
+        <td>${b.status==='Open'?`<button class="btn btn-danger btn-sm" onclick="removeFromBatch(${p.id})">Remove</button>`:'—'}</td>
+      </tr>`).join('')
+    : `<tr><td colspan="5"><div class="empty-state"><div class="ei">📄</div>No payments in this batch</div></td></tr>`;
+}
+
+function removeFromBatch(payId) {
+  const p = db.payments.find(x=>x.id===payId);
+  p.batchId = null; p.status = 'Ready';
+  renderBatchDetail();
+  toast('Payment removed from batch');
+}
+
+function openAddToBatchModal() {
+  const eligible = db.payments.filter(p=>!p.batchId && p.status!=='Processed');
+  const el = document.getElementById('eligible-payments-list');
+  if (!eligible.length) {
+    el.innerHTML = '<div class="empty-state"><div class="ei">✅</div>No eligible payments available</div>';
+  } else {
+    el.innerHTML = eligible.map(p=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">
+        <div>
+          <div style="font-weight:600;font-size:13.5px;">${supplierName(p.supplierId)}</div>
+          <div style="color:var(--muted);font-size:12px;">${p.purpose} · INV: ${p.invoice}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <span class="ugx">${fmt(p.amount)}</span>
+          <button class="btn btn-primary btn-sm" onclick="addToBatch(${p.id})">Add</button>
+        </div>
+      </div>`).join('');
+  }
+  openModal('add-batch-modal');
+}
+
+function addToBatch(payId) {
+  const p = db.payments.find(x=>x.id===payId);
+  p.batchId = currentBatchId; p.status = 'Batched';
+  openAddToBatchModal();
+  renderBatchDetail();
+  const b = db.batches.find(x=>x.id===currentBatchId);
+  const pays = db.payments.filter(p=>p.batchId===currentBatchId);
+  const total = pays.reduce((s,p)=>s+p.amount,0);
+  document.getElementById('bd-hero').querySelector('.bhs-val').textContent = pays.length;
+  document.getElementById('bd-hero').querySelectorAll('.bhs-val')[1].textContent = 'UGX '+fmt(total);
+  toast('Payment added to batch ✓','success');
+}
+
+// ── Exports ────────────────────────────────────────────
+function renderExports() {
+  const sel = document.getElementById('export-batch-sel');
+  sel.innerHTML = db.batches.map(b=>`<option value="${b.id}">B-${String(b.id).padStart(4,'0')} — ${b.description}</option>`).join('');
+  const tbody = document.getElementById('export-batch-tbody');
+  tbody.innerHTML = db.batches.map(b=>{
+    const pays = db.payments.filter(p=>p.batchId===b.id);
+    const total = pays.reduce((s,p)=>s+p.amount,0);
+    return `<tr>
+      <td class="mono">B-${String(b.id).padStart(4,'0')}</td>
+      <td>${b.description}</td>
+      <td>${pays.length}</td>
+      <td class="ugx">${fmt(total)}</td>
+      <td>${badge(b.status==='Finalized'?'Finalized':'Open')}</td>
+    </tr>`;
+  }).join('') || `<tr><td colspan="5"><div class="empty-state">No batches</div></td></tr>`;
+}
+
+function doExportBatch() {
+  const id = parseInt(document.getElementById('export-batch-sel').value);
+  doExportBatchById(id);
+}
+
+function doExportBatchById(id) {
+  const b = db.batches.find(x=>x.id===id);
+  const pays = db.payments.filter(p=>p.batchId===id);
+  let csv = 'Batch ID,Description,Status\n';
+  csv += `B-${String(b.id).padStart(4,'0')},${b.description},${b.status}\n\n`;
+  csv += 'Supplier,TIN,Amount (UGX),Purpose,Invoice #,Invoice Date,Payment Date\n';
+  pays.forEach(p=>{
+    const s = db.suppliers.find(x=>x.id===p.supplierId)||{};
+    csv += `"${s.name}","${s.tin}",${p.amount},"${p.purpose}","${p.invoice}","${p.invoiceDate}","${p.payDate}"\n`;
+  });
+  downloadCSV(csv, `FWAS_Batch_B${String(b.id).padStart(4,'0')}.csv`);
+  toast('Batch exported ✓','success');
+}
+
+function doExportSuppliers() {
+  let csv = 'Name,TIN,Phone,Email,Address,Bank,Account,Branch\n';
+  db.suppliers.forEach(s=>{
+    csv += `"${s.name}","${s.tin}","${s.phone}","${s.email}","${s.address}","${s.bank}","${s.account}","${s.branch}"\n`;
+  });
+  downloadCSV(csv, 'FWAS_Suppliers.csv');
+  toast('Suppliers exported ✓','success');
+}
+
+function downloadCSV(csv, filename) {
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── Users ──────────────────────────────────────────────
+function renderUsers() {
+  document.getElementById('user-tbody').innerHTML = db.users.map(u=>`<tr>
+    <td><b>${u.fullName}</b></td>
+    <td class="mono">${u.username}</td>
+    <td>${badge(u.role==='Admin'?'Processed':(u.role==='Supervisor'?'Batched':'Draft'))}</td>
+    <td><button class="icon-btn del" onclick="deleteUser(${u.id})" title="Delete">🗑️</button></td>
+  </tr>`).join('');
+}
+
+function openUserModal() { openModal('user-modal'); }
+
+function saveUser() {
+  const data = {
+    fullName: document.getElementById('um-name').value.trim(),
+    username: document.getElementById('um-user').value.trim(),
+    password: document.getElementById('um-pass').value.trim(),
+    role:     document.getElementById('um-role').value,
+  };
+  if (!data.fullName || !data.username || !data.password) { toast('All fields required','error'); return; }
+  db.users.push({ id: db.nextId.users++, ...data });
+  toast('User created ✓','success');
+  closeModal('user-modal');
+  renderUsers();
+}
+
+function deleteUser(id) {
+  if (id === currentUser.id) { toast('Cannot delete your own account','error'); return; }
+  if (!confirm('Delete this user?')) return;
+  db.users = db.users.filter(u=>u.id!==id);
+  renderUsers(); toast('User deleted');
+}
+
+// ── Utilities ──────────────────────────────────────────
+function supplierName(id) {
+  const s = db.suppliers.find(x=>x.id===id);
+  return s ? s.name : 'Unknown';
+}
+
+function fmt(n) {
+  return Number(n).toLocaleString('en-UG');
+}
+
+function badge(status) {
+  const map = {
+    'Draft':'badge-grey','Ready':'badge-amber','Batched':'badge-blue',
+    'Processed':'badge-green','Open':'badge-blue','Finalized':'badge-green',
+    'Officer':'badge-grey','Supervisor':'badge-amber','Admin':'badge-purple'
+  };
+  return `<span class="badge ${map[status]||'badge-grey'}">${status}</span>`;
+}
+
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function toast(msg, type='') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'show' + (type?' '+type:'');
+  setTimeout(() => el.className='', 3000);
+}
+
+// Close modal on overlay click
+document.querySelectorAll('.modal-overlay').forEach(o=>{
+  o.addEventListener('click', e => { if(e.target===o) o.classList.remove('open'); });
+});
+</script>
+</body>
+</html>
